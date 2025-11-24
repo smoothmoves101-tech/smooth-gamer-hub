@@ -4,33 +4,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, ShoppingCart, TrendingDown, Info } from "lucide-react";
+import { Wallet, ShoppingCart, TrendingDown, Info, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useWeb3 } from "@/hooks/useWeb3";
 
 export const BuySellSection = () => {
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
+  const { isConnected, connectWallet, account, chainId, switchToPolygon } = useWeb3();
 
-  const handleConnect = () => {
-    toast({
-      title: "MetaMask Connection",
-      description: "MetaMask integration will be configured with your contract address.",
-    });
-  };
+  const isPolygon = chainId === 137;
 
-  const handleTransaction = (type: "buy" | "sell") => {
-    if (!amount) {
+  const handleTransaction = async (type: "buy" | "sell") => {
+    if (!isConnected) {
       toast({
-        title: "Error",
-        description: "Please enter an amount",
+        title: "Wallet Not Connected",
+        description: "Please connect your MetaMask wallet first.",
         variant: "destructive",
       });
       return;
     }
 
+    if (!isPolygon) {
+      toast({
+        title: "Wrong Network",
+        description: "Please switch to Polygon network.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // TODO: Replace with actual smart contract interaction
     toast({
-      title: `${type === "buy" ? "Buy" : "Sell"} Order`,
-      description: `Transaction for ${amount} SMOOTH tokens will be processed via MetaMask.`,
+      title: "Contract Integration Required",
+      description: `Ready to ${type} ${amount} SMOOTH tokens. Add your smart contract address to complete the transaction.`,
+    });
+
+    console.log(`${type} transaction:`, {
+      amount,
+      account,
+      chainId,
+      tokenAmount: parseFloat(amount),
+      usdValue: (parseFloat(amount) * 0.005).toFixed(4),
     });
   };
 
@@ -54,16 +78,45 @@ export const BuySellSection = () => {
                 <Wallet className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-semibold text-foreground">Wallet Status</p>
-                  <p className="text-sm text-muted-foreground">Not Connected</p>
+                  {isConnected ? (
+                    <>
+                      <p className="text-sm text-primary font-mono">
+                        {account?.slice(0, 6)}...{account?.slice(-4)}
+                      </p>
+                      {!isPolygon && (
+                        <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          Wrong Network
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Not Connected</p>
+                  )}
                 </div>
               </div>
-              <Button 
-                onClick={handleConnect}
-                className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold"
-              >
-                <Wallet className="w-4 h-4 mr-2" />
-                Connect MetaMask
-              </Button>
+              {!isConnected ? (
+                <Button 
+                  onClick={connectWallet}
+                  className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold"
+                >
+                  <Wallet className="w-4 h-4 mr-2" />
+                  Connect MetaMask
+                </Button>
+              ) : !isPolygon ? (
+                <Button 
+                  onClick={switchToPolygon}
+                  variant="destructive"
+                  className="font-semibold"
+                >
+                  Switch to Polygon
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-primary">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Connected to Polygon
+                </div>
+              )}
             </div>
           </div>
 
@@ -118,11 +171,12 @@ export const BuySellSection = () => {
 
                 <Button 
                   onClick={() => handleTransaction("buy")}
-                  className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-bold text-lg py-6"
+                  disabled={!isConnected || !isPolygon}
+                  className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-bold text-lg py-6 disabled:opacity-50"
                   size="lg"
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
-                  Buy SMOOTH Tokens
+                  {!isConnected ? "Connect Wallet to Buy" : !isPolygon ? "Switch to Polygon" : "Buy SMOOTH Tokens"}
                 </Button>
               </div>
             </TabsContent>
@@ -154,11 +208,12 @@ export const BuySellSection = () => {
 
                 <Button 
                   onClick={() => handleTransaction("sell")}
-                  className="w-full bg-secondary hover:opacity-90 text-secondary-foreground font-bold text-lg py-6"
+                  disabled={!isConnected || !isPolygon}
+                  className="w-full bg-secondary hover:opacity-90 text-secondary-foreground font-bold text-lg py-6 disabled:opacity-50"
                   size="lg"
                 >
                   <TrendingDown className="w-5 h-5 mr-2" />
-                  Sell SMOOTH Tokens
+                  {!isConnected ? "Connect Wallet to Sell" : !isPolygon ? "Switch to Polygon" : "Sell SMOOTH Tokens"}
                 </Button>
               </div>
             </TabsContent>
