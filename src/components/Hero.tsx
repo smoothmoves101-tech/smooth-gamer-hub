@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Wallet } from "lucide-react";
+import { useWeb3 } from "@/hooks/useWeb3";
 
 export const Hero = () => {
+  const { isConnected, isConnecting, connectWallet, account } = useWeb3();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20">
       {/* Animated background grid */}
@@ -55,13 +57,27 @@ export const Hero = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-          <Button 
-            size="lg" 
-            className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-bold text-lg px-8 py-6 shadow-glow group"
-          >
-            Connect MetaMask
-            <Zap className="ml-2 w-5 h-5 group-hover:animate-pulse" />
-          </Button>
+          {isConnected ? (
+            <div className="flex items-center gap-3 px-6 py-3 rounded-lg bg-card border border-primary/50 shadow-glow">
+              <Wallet className="w-5 h-5 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">Connected</p>
+                <p className="font-mono text-sm text-foreground">
+                  {account?.slice(0, 6)}...{account?.slice(-4)}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Button 
+              size="lg"
+              onClick={connectWallet}
+              disabled={isConnecting}
+              className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-bold text-lg px-8 py-6 shadow-glow group"
+            >
+              {isConnecting ? "Connecting..." : "Connect MetaMask"}
+              <Zap className="ml-2 w-5 h-5 group-hover:animate-pulse" />
+            </Button>
+          )}
           <Button 
             size="lg" 
             variant="outline"
