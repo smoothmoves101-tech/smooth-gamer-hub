@@ -140,11 +140,11 @@ export const BuySellSection = () => {
                 <div className="p-4 bg-muted/30 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Price per token</span>
-                    <span className="font-semibold text-foreground">$0.005 / {tokenPriceMatic.toFixed(6)} MATIC</span>
+                    <span className="font-semibold text-foreground">{tokenPriceMatic.toFixed(8)} POL</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">You'll pay (MATIC)</span>
-                    <span className="font-semibold text-primary">{amount ? (parseFloat(amount) * tokenPriceMatic).toFixed(4) : '0.0000'}</span>
+                    <span className="text-muted-foreground">You'll pay (POL)</span>
+                    <span className="font-semibold text-primary">{amount ? (parseFloat(amount) * tokenPriceMatic).toFixed(6) : '0.000000'}</span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-border">
                     <span className="text-muted-foreground">You'll receive</span>
@@ -155,7 +155,7 @@ export const BuySellSection = () => {
                 <div className="flex items-start gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
                   <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-foreground">
-                    <strong>How it works:</strong> Click Buy to send MATIC to the presale wallet. Your {symbol} tokens will be transferred to your wallet automatically or shortly after confirmation.
+                    <strong>How it works:</strong> Click Buy to send POL to the presale wallet. Your {symbol} tokens will be transferred to your wallet automatically or shortly after confirmation.
                   </div>
                 </div>
 
@@ -195,11 +195,11 @@ export const BuySellSection = () => {
                 <div className="p-4 bg-muted/30 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Price per token</span>
-                    <span className="font-semibold text-foreground">{tokenPriceMatic.toFixed(6)} MATIC</span>
+                    <span className="font-semibold text-foreground">{tokenPriceMatic.toFixed(8)} POL</span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-border">
-                    <span className="text-muted-foreground">You'll receive (MATIC)</span>
-                    <span className="font-bold text-foreground">{amount ? (parseFloat(amount) * tokenPriceMatic).toFixed(4) : '0.0000'}</span>
+                    <span className="text-muted-foreground">You'll receive (POL)</span>
+                    <span className="font-bold text-foreground">{amount ? (parseFloat(amount) * tokenPriceMatic).toFixed(6) : '0.000000'}</span>
                   </div>
                 </div>
 
