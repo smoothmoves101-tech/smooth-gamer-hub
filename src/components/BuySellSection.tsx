@@ -4,16 +4,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, ShoppingCart, TrendingDown, Info, AlertTriangle } from "lucide-react";
+import { Wallet, ShoppingCart, TrendingDown, Info, AlertTriangle, Copy, ExternalLink } from "lucide-react";
 import { useWeb3 } from "@/hooks/useWeb3";
 import { useBuySell } from "@/hooks/useBuySell";
+import { useTokenContract } from "@/hooks/useTokenContract";
+import { toast } from "sonner";
 
 export const BuySellSection = () => {
   const [amount, setAmount] = useState("");
   const { isConnected, connectWallet, account, chainId, switchToPolygon } = useWeb3();
   const { buyTokens, sellTokens, loading, balance, symbol, tokenPriceMatic } = useBuySell();
+  const { contractAddress } = useTokenContract();
 
   const isPolygon = chainId === 137;
+
+  const copyContractAddress = () => {
+    navigator.clipboard.writeText(contractAddress);
+    toast.success("Contract address copied to clipboard!");
+  };
+
+  const addToMetaMask = async () => {
+    try {
+      await (window as any).ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: contractAddress,
+            symbol: symbol,
+            decimals: 18,
+          },
+        },
+      });
+      toast.success("Token added to MetaMask!");
+    } catch (error) {
+      toast.error("Failed to add token to MetaMask");
+    }
+  };
 
   const handleBuy = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -54,6 +81,46 @@ export const BuySellSection = () => {
         </div>
 
         <Card className="p-8 bg-card/50 backdrop-blur border-border shadow-glow-secondary">
+          {/* Contract Address & Trading Links */}
+          <div className="mb-8 p-6 bg-gradient-to-br from-primary/5 to-purple-500/5 rounded-lg border border-primary/20 space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Token Contract Address</h3>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 p-3 bg-background/80 backdrop-blur rounded text-xs sm:text-sm font-mono overflow-x-auto border border-border">
+                  {contractAddress}
+                </code>
+                <Button variant="outline" size="icon" onClick={copyContractAddress} className="shrink-0">
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button 
+                onClick={addToMetaMask} 
+                variant="secondary"
+                className="flex-1 font-semibold"
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Add to MetaMask
+              </Button>
+              <Button 
+                asChild
+                className="flex-1 bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold"
+              >
+                <a 
+                  href={`https://app.uniswap.org/swap?outputCurrency=${contractAddress}&chain=polygon`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
+                >
+                  Trade on Uniswap
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </Button>
+            </div>
+          </div>
+
           {/* Wallet Connection */}
           <div className="mb-8 p-4 bg-muted/30 rounded-lg border border-border">
             <div className="flex items-center justify-between flex-wrap gap-4">
