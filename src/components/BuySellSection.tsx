@@ -5,96 +5,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, ShoppingCart, TrendingDown, Info, AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useWeb3 } from "@/hooks/useWeb3";
-import { useTokenContract } from "@/hooks/useTokenContract";
+import { useBuySell } from "@/hooks/useBuySell";
 
 export const BuySellSection = () => {
   const [amount, setAmount] = useState("");
-  const { toast } = useToast();
   const { isConnected, connectWallet, account, chainId, switchToPolygon } = useWeb3();
-  const { balance, transferTokens, loading, symbol, contractAddress } = useTokenContract();
+  const { buyTokens, sellTokens, loading, balance, symbol, tokenPriceMatic } = useBuySell();
 
   const isPolygon = chainId === 137;
 
   const handleBuy = async () => {
-    if (!isConnected) {
-      toast({
-        title: "Wallet Not Connected",
-        description: "Please connect your MetaMask wallet first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isPolygon) {
-      toast({
-        title: "Wrong Network",
-        description: "Please switch to Polygon network.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!amount || parseFloat(amount) <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid amount greater than 0.",
-        variant: "destructive",
-      });
       return;
     }
 
-    toast({
-      title: "Buy Tokens",
-      description: `To buy ${symbol} tokens, use a DEX like QuickSwap or Uniswap with contract: ${contractAddress.substring(0, 10)}...`,
-    });
+    try {
+      await buyTokens(parseFloat(amount));
+      setAmount("");
+    } catch (error) {
+      console.error("Buy error:", error);
+    }
   };
 
   const handleSell = async () => {
-    if (!isConnected) {
-      toast({
-        title: "Wallet Not Connected",
-        description: "Please connect your MetaMask wallet first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isPolygon) {
-      toast({
-        title: "Wrong Network",
-        description: "Please switch to Polygon network.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!amount || parseFloat(amount) <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid amount greater than 0.",
-        variant: "destructive",
-      });
       return;
     }
 
-    const amountNum = parseFloat(amount);
-    const balanceNum = parseFloat(balance);
-
-    if (amountNum > balanceNum) {
-      toast({
-        title: "Insufficient Balance",
-        description: `You only have ${parseFloat(balance).toFixed(2)} ${symbol} tokens.`,
-        variant: "destructive",
-      });
-      return;
+    try {
+      await sellTokens(parseFloat(amount));
+      setAmount("");
+    } catch (error) {
+      console.error("Sell error:", error);
     }
-
-    toast({
-      title: "Sell Tokens",
-      description: `Use a DEX to sell your ${symbol} tokens. Your balance: ${parseFloat(balance).toFixed(2)} ${symbol}`,
-    });
   };
 
   return (
@@ -195,24 +139,24 @@ export const BuySellSection = () => {
 
                 <div className="p-4 bg-muted/30 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Contract</span>
-                    <span className="font-mono text-xs text-foreground">{contractAddress.substring(0, 10)}...{contractAddress.substring(38)}</span>
+                    <span className="text-muted-foreground">Price per token</span>
+                    <span className="font-semibold text-foreground">$0.005 / {tokenPriceMatic.toFixed(6)} MATIC</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price per token</span>
-                    <span className="font-semibold text-foreground">$0.005</span>
+                    <span className="text-muted-foreground">You'll pay (MATIC)</span>
+                    <span className="font-semibold text-primary">{amount ? (parseFloat(amount) * tokenPriceMatic).toFixed(4) : '0.0000'}</span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-border">
-                    <span className="text-muted-foreground">Total Cost</span>
-                    <span className="font-bold text-foreground">${amount ? (parseFloat(amount) * 0.005).toFixed(4) : '0.0000'}</span>
+                    <span className="text-muted-foreground">You'll receive</span>
+                    <span className="font-bold text-foreground">{amount || '0'} {symbol}</span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
                   <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-foreground">
-                    <strong>Early Investor Bonus:</strong> Buy $50 or more and get an extra 10% SMOOTH tokens added to your wallet!
-                  </p>
+                  <div className="text-sm text-foreground">
+                    <strong>How it works:</strong> Click Buy to send MATIC to the presale wallet. Your {symbol} tokens will be transferred to your wallet automatically or shortly after confirmation.
+                  </div>
                 </div>
 
                 <Button 
@@ -251,11 +195,11 @@ export const BuySellSection = () => {
                 <div className="p-4 bg-muted/30 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Price per token</span>
-                    <span className="font-semibold text-foreground">$0.005</span>
+                    <span className="font-semibold text-foreground">{tokenPriceMatic.toFixed(6)} MATIC</span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-border">
-                    <span className="text-muted-foreground">You'll receive</span>
-                    <span className="font-bold text-foreground">${amount ? (parseFloat(amount) * 0.005).toFixed(4) : '0.0000'}</span>
+                    <span className="text-muted-foreground">You'll receive (MATIC)</span>
+                    <span className="font-bold text-foreground">{amount ? (parseFloat(amount) * tokenPriceMatic).toFixed(4) : '0.0000'}</span>
                   </div>
                 </div>
 

@@ -1,1 +1,4 @@
 project_id = "zwjphgoyjmivpmupehdj"
+
+[functions.process-token-purchase]
+verify_jwt = false
