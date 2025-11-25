@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Wallet } from "lucide-react";
 import { useWeb3 } from "@/hooks/useWeb3";
+import { useTokenContract } from "@/hooks/useTokenContract";
 
 export const Hero = () => {
   const { isConnected, isConnecting, connectWallet, account } = useWeb3();
+  const { balance, symbol } = useTokenContract();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20">
       {/* Animated background grid */}
@@ -58,13 +60,24 @@ export const Hero = () => {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
           {isConnected ? (
-            <div className="flex items-center gap-3 px-6 py-3 rounded-lg bg-card border border-primary/50 shadow-glow">
-              <Wallet className="w-5 h-5 text-primary" />
-              <div>
-                <p className="text-xs text-muted-foreground">Connected</p>
-                <p className="font-mono text-sm text-foreground">
-                  {account?.slice(0, 6)}...{account?.slice(-4)}
-                </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-3 px-6 py-3 rounded-lg bg-card border border-primary/50 shadow-glow">
+                <Wallet className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Connected</p>
+                  <p className="font-mono text-sm text-foreground">
+                    {account?.slice(0, 6)}...{account?.slice(-4)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 px-6 py-3 rounded-lg bg-card border border-secondary/50 shadow-glow-secondary">
+                <Zap className="w-5 h-5 text-secondary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Balance</p>
+                  <p className="font-mono text-sm text-foreground">
+                    {parseFloat(balance).toFixed(2)} {symbol}
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
