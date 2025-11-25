@@ -15,7 +15,7 @@ export const useBuySell = () => {
   const { toast } = useToast();
 
   const TOKEN_PRICE_MATIC = 0.00001; // 1 token = 0.00001 POL (based on Uniswap liquidity)
-  const MATIC_PRICE_USD = 0.80; // Approximate
+  const MATIC_PRICE_USD = 1.41; // Current POL price
   const TOKEN_PRICE_USD = TOKEN_PRICE_MATIC * MATIC_PRICE_USD;
 
   const buyTokens = async (tokenAmount: number) => {
