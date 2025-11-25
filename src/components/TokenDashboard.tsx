@@ -11,14 +11,16 @@ export const TokenDashboard = () => {
     return numFloat.toLocaleString('en-US', { maximumFractionDigits: 0 });
   };
 
-  const marketCap = parseFloat(totalSupply) * 0.005;
+  const TOKEN_PRICE_POL = 0.00001;
+  const POL_PRICE_USD = 1.41;
+  const tokenPriceUSD = TOKEN_PRICE_POL * POL_PRICE_USD;
 
   const stats = [
     {
       icon: DollarSign,
       label: "Current Price",
-      value: "$0.005",
-      change: "+0%",
+      value: `${TOKEN_PRICE_POL} POL`,
+      subtitle: `≈ $${tokenPriceUSD.toFixed(8)}`,
       changeType: "neutral" as const,
     },
     {
@@ -31,8 +33,8 @@ export const TokenDashboard = () => {
     {
       icon: PieChart,
       label: "Market Cap",
-      value: `$${marketCap.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-      subtitle: "USD",
+      value: "Not Available",
+      subtitle: "Launching Soon",
       changeType: "neutral" as const,
     },
     {
