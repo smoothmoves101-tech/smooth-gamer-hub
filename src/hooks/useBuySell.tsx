@@ -14,9 +14,9 @@ export const useBuySell = () => {
   const { balance, symbol, fetchBalance } = useTokenContract();
   const { toast } = useToast();
 
-  const TOKEN_PRICE_USD = 0.005;
-  const MATIC_PRICE_USD = 0.80; // Approximate, should be fetched from oracle in production
-  const TOKEN_PRICE_MATIC = TOKEN_PRICE_USD / MATIC_PRICE_USD;
+  const TOKEN_PRICE_MATIC = 0.00001; // 1 token = 0.00001 POL (based on Uniswap liquidity)
+  const MATIC_PRICE_USD = 0.80; // Approximate
+  const TOKEN_PRICE_USD = TOKEN_PRICE_MATIC * MATIC_PRICE_USD;
 
   const buyTokens = async (tokenAmount: number) => {
     if (!isConnected || !account || !signer) {
