@@ -7,15 +7,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, ShoppingCart, TrendingDown, Info, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWeb3 } from "@/hooks/useWeb3";
+import { useTokenContract } from "@/hooks/useTokenContract";
 
 export const BuySellSection = () => {
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
   const { isConnected, connectWallet, account, chainId, switchToPolygon } = useWeb3();
+  const { balance, transferTokens, loading, symbol, contractAddress } = useTokenContract();
 
   const isPolygon = chainId === 137;
 
-  const handleTransaction = async (type: "buy" | "sell") => {
+  const handleBuy = async () => {
     if (!isConnected) {
       toast({
         title: "Wallet Not Connected",
@@ -43,18 +45,55 @@ export const BuySellSection = () => {
       return;
     }
 
-    // TODO: Replace with actual smart contract interaction
     toast({
-      title: "Contract Integration Required",
-      description: `Ready to ${type} ${amount} SMOOTH tokens. Add your smart contract address to complete the transaction.`,
+      title: "Buy Tokens",
+      description: `To buy ${symbol} tokens, use a DEX like QuickSwap or Uniswap with contract: ${contractAddress.substring(0, 10)}...`,
     });
+  };
 
-    console.log(`${type} transaction:`, {
-      amount,
-      account,
-      chainId,
-      tokenAmount: parseFloat(amount),
-      usdValue: (parseFloat(amount) * 0.005).toFixed(4),
+  const handleSell = async () => {
+    if (!isConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your MetaMask wallet first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isPolygon) {
+      toast({
+        title: "Wrong Network",
+        description: "Please switch to Polygon network.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const amountNum = parseFloat(amount);
+    const balanceNum = parseFloat(balance);
+
+    if (amountNum > balanceNum) {
+      toast({
+        title: "Insufficient Balance",
+        description: `You only have ${parseFloat(balance).toFixed(2)} ${symbol} tokens.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Sell Tokens",
+      description: `Use a DEX to sell your ${symbol} tokens. Your balance: ${parseFloat(balance).toFixed(2)} ${symbol}`,
     });
   };
 
@@ -136,7 +175,7 @@ export const BuySellSection = () => {
             <TabsContent value="buy" className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="buy-amount" className="text-foreground">Amount (SMOOTH)</Label>
+                  <Label htmlFor="buy-amount" className="text-foreground">Amount ({symbol})</Label>
                   <Input
                     id="buy-amount"
                     type="number"
@@ -144,17 +183,24 @@ export const BuySellSection = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="mt-2 bg-background border-border text-foreground"
+                    disabled={loading}
                   />
+                </div>
+                
+                <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <p className="text-sm text-foreground">
+                    <strong>Your Balance:</strong> {parseFloat(balance).toFixed(2)} {symbol}
+                  </p>
                 </div>
 
                 <div className="p-4 bg-muted/30 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price per token</span>
-                    <span className="font-semibold text-foreground">$0.005</span>
+                    <span className="text-muted-foreground">Contract</span>
+                    <span className="font-mono text-xs text-foreground">{contractAddress.substring(0, 10)}...{contractAddress.substring(38)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Presale Bonus (10%)</span>
-                    <span className="font-semibold text-primary">+{amount ? (parseFloat(amount) * 0.1).toFixed(2) : '0.00'} SMOOTH</span>
+                    <span className="text-muted-foreground">Price per token</span>
+                    <span className="font-semibold text-foreground">$0.005</span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-border">
                     <span className="text-muted-foreground">Total Cost</span>
@@ -170,13 +216,13 @@ export const BuySellSection = () => {
                 </div>
 
                 <Button 
-                  onClick={() => handleTransaction("buy")}
-                  disabled={!isConnected || !isPolygon}
+                  onClick={handleBuy}
+                  disabled={!isConnected || !isPolygon || loading}
                   className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-bold text-lg py-6 disabled:opacity-50"
                   size="lg"
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
-                  {!isConnected ? "Connect Wallet to Buy" : !isPolygon ? "Switch to Polygon" : "Buy SMOOTH Tokens"}
+                  {loading ? "Processing..." : !isConnected ? "Connect Wallet to Buy" : !isPolygon ? "Switch to Polygon" : `Buy ${symbol} Tokens`}
                 </Button>
               </div>
             </TabsContent>
@@ -184,7 +230,7 @@ export const BuySellSection = () => {
             <TabsContent value="sell" className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="sell-amount" className="text-foreground">Amount (SMOOTH)</Label>
+                  <Label htmlFor="sell-amount" className="text-foreground">Amount ({symbol})</Label>
                   <Input
                     id="sell-amount"
                     type="number"
@@ -192,7 +238,14 @@ export const BuySellSection = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="mt-2 bg-background border-border text-foreground"
+                    disabled={loading}
                   />
+                </div>
+
+                <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <p className="text-sm text-foreground">
+                    <strong>Your Balance:</strong> {parseFloat(balance).toFixed(2)} {symbol}
+                  </p>
                 </div>
 
                 <div className="p-4 bg-muted/30 rounded-lg space-y-2">
@@ -207,13 +260,13 @@ export const BuySellSection = () => {
                 </div>
 
                 <Button 
-                  onClick={() => handleTransaction("sell")}
-                  disabled={!isConnected || !isPolygon}
+                  onClick={handleSell}
+                  disabled={!isConnected || !isPolygon || loading}
                   className="w-full bg-secondary hover:opacity-90 text-secondary-foreground font-bold text-lg py-6 disabled:opacity-50"
                   size="lg"
                 >
                   <TrendingDown className="w-5 h-5 mr-2" />
-                  {!isConnected ? "Connect Wallet to Sell" : !isPolygon ? "Switch to Polygon" : "Sell SMOOTH Tokens"}
+                  {loading ? "Processing..." : !isConnected ? "Connect Wallet to Sell" : !isPolygon ? "Switch to Polygon" : `Sell ${symbol} Tokens`}
                 </Button>
               </div>
             </TabsContent>

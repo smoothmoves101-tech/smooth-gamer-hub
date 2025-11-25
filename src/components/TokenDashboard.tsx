@@ -1,7 +1,18 @@
 import { Card } from "@/components/ui/card";
 import { TrendingUp, DollarSign, Coins, PieChart } from "lucide-react";
+import { useTokenContract } from "@/hooks/useTokenContract";
 
 export const TokenDashboard = () => {
+  const { totalSupply, symbol } = useTokenContract();
+  
+  const formatNumber = (num: string) => {
+    const numFloat = parseFloat(num);
+    if (isNaN(numFloat)) return "0";
+    return numFloat.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
+  const marketCap = parseFloat(totalSupply) * 0.005;
+
   const stats = [
     {
       icon: DollarSign,
@@ -13,14 +24,14 @@ export const TokenDashboard = () => {
     {
       icon: Coins,
       label: "Total Supply",
-      value: "200,000",
-      subtitle: "SMOOTH Tokens",
+      value: formatNumber(totalSupply),
+      subtitle: `${symbol} Tokens`,
       changeType: "neutral" as const,
     },
     {
       icon: PieChart,
       label: "Market Cap",
-      value: "$1,000",
+      value: `$${marketCap.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
       subtitle: "USD",
       changeType: "neutral" as const,
     },
