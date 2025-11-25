@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      token_orders: {
+        Row: {
+          created_at: string
+          fulfilled_at: string | null
+          id: string
+          order_type: string
+          payment_amount: number
+          payment_currency: string
+          status: string
+          token_amount: number
+          transaction_hash: string | null
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          order_type: string
+          payment_amount: number
+          payment_currency?: string
+          status?: string
+          token_amount: number
+          transaction_hash?: string | null
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          order_type?: string
+          payment_amount?: number
+          payment_currency?: string
+          status?: string
+          token_amount?: number
+          transaction_hash?: string | null
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
