@@ -5,9 +5,8 @@ import { useTokenContract } from "./useTokenContract";
 import { useToast } from "./use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-// Presale wallet address - UPDATE THIS WITH YOUR ACTUAL WALLET ADDRESS
-// This is the wallet that will receive MATIC payments from token purchases
-const PRESALE_WALLET = "0x5387F9B43996fDe1834Dfd771552bB881E6Fef5fC"; // Replace with your actual wallet address
+// Presale wallet address - properly checksummed
+const PRESALE_WALLET = ethers.getAddress("0x5387F9B43996fDe1834Dfd771552bB881E6Fef5fc");
 
 export const useBuySell = () => {
   const [loading, setLoading] = useState(false);
@@ -40,10 +39,11 @@ export const useBuySell = () => {
 
       console.log(`Buying ${tokenAmount} tokens for ${maticAmount} MATIC`);
 
-      // Send MATIC to presale wallet
+      // Send MATIC to presale wallet - ensure address is properly formatted
       const tx = await signer.sendTransaction({
-        to: PRESALE_WALLET,
+        to: PRESALE_WALLET, // Already checksummed at module level
         value: maticAmountWei,
+        gasLimit: 21000, // Standard ETH transfer gas limit
       });
 
       toast({
