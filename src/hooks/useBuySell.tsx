@@ -5,8 +5,8 @@ import { useTokenContract } from "./useTokenContract";
 import { useToast } from "./use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-// Presale wallet address - properly checksummed
-const PRESALE_WALLET = ethers.getAddress("0x5387F9B43996fDe1834Dfd771552bB881E6Fef5fc");
+// Presale wallet address - will be checksummed when used
+const PRESALE_WALLET = "0x5387f9b43996fde1834dfd771552bb881e6fef5fc";
 
 export const useBuySell = () => {
   const [loading, setLoading] = useState(false);
@@ -39,9 +39,9 @@ export const useBuySell = () => {
 
       console.log(`Buying ${tokenAmount} tokens for ${maticAmount} MATIC`);
 
-      // Send MATIC to presale wallet - ensure address is properly formatted
+      // Send MATIC to presale wallet with properly formatted address
       const tx = await signer.sendTransaction({
-        to: PRESALE_WALLET, // Already checksummed at module level
+        to: ethers.getAddress(PRESALE_WALLET), // Checksum the address here
         value: maticAmountWei,
         gasLimit: 21000, // Standard ETH transfer gas limit
       });
