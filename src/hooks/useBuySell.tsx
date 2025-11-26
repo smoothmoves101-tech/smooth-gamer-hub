@@ -51,26 +51,37 @@ export const useBuySell = () => {
         description: "Waiting for confirmation...",
       });
 
-      // Wait for transaction with proper error handling
-      let receipt;
-      try {
-        receipt = await tx.wait();
-      } catch (waitError: any) {
-        // If wait() fails due to ENS issues, check transaction status manually
-        console.log("Wait error, checking transaction manually:", waitError);
-        const provider = signer.provider;
-        if (provider) {
-          receipt = await provider.getTransactionReceipt(tx.hash);
-          // Wait a bit and check again if not found
-          if (!receipt) {
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            receipt = await provider.getTransactionReceipt(tx.hash);
+      // Wait for confirmation with polling instead of wait()
+      console.log("Transaction hash:", tx.hash);
+      
+      // Poll for transaction receipt instead of using wait()
+      let receipt = null;
+      let attempts = 0;
+      const maxAttempts = 60; // 60 attempts * 2 seconds = 2 minutes max
+      
+      while (!receipt && attempts < maxAttempts) {
+        try {
+          if (signer.provider) {
+            receipt = await signer.provider.getTransactionReceipt(tx.hash);
+            if (receipt) {
+              console.log("Transaction confirmed:", receipt);
+              break;
+            }
           }
+        } catch (error) {
+          console.log("Error getting receipt, retrying...", error);
         }
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
       }
 
       if (!receipt) {
-        throw new Error("Transaction failed");
+        throw new Error("Transaction confirmation timeout");
+      }
+
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed on chain");
       }
 
       console.log("Transaction confirmed:", receipt.hash);
