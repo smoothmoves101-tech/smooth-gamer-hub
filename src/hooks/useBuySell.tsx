@@ -6,7 +6,7 @@ import { useToast } from "./use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 // Presale wallet address - will be checksummed when used
-const PRESALE_WALLET = "0x5387f9b43996fde1834dfd771552bb881e6fef5fc";
+const PRESALE_WALLET = "0x87f1c32376d915779fe8dd261f463f0f2844ca79";
 
 export const useBuySell = () => {
   const [loading, setLoading] = useState(false);
