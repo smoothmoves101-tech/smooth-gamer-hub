@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           fulfilled_at: string | null
           id: string
+          liquidity_added: boolean
           order_type: string
           payment_amount: number
           payment_currency: string
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           fulfilled_at?: string | null
           id?: string
+          liquidity_added?: boolean
           order_type: string
           payment_amount: number
           payment_currency?: string
@@ -45,6 +47,7 @@ export type Database = {
           created_at?: string
           fulfilled_at?: string | null
           id?: string
+          liquidity_added?: boolean
           order_type?: string
           payment_amount?: number
           payment_currency?: string

@@ -1,4 +1,5 @@
 import { Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const Footer = () => {
   return (
@@ -26,9 +27,17 @@ export const Footer = () => {
         </div>
 
         <div className="mt-8 pt-8 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">
-            Disclaimer: Cryptocurrency investments carry risk. Please do your own research before investing.
-          </p>
+          <div className="flex flex-col items-center gap-4">
+            <Link 
+              to="/admin" 
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              Admin Dashboard
+            </Link>
+            <p className="text-xs text-muted-foreground text-center">
+              Disclaimer: Cryptocurrency investments carry risk. Please do your own research before investing.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
