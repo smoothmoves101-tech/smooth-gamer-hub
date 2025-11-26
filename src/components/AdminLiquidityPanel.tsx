@@ -4,19 +4,23 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useUniswapLiquidity } from '@/hooks/useUniswapLiquidity';
 import { useWeb3 } from '@/hooks/useWeb3';
-import { Droplets, TrendingUp, RefreshCw } from 'lucide-react';
+import { Droplets, TrendingUp, RefreshCw, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const AdminLiquidityPanel = () => {
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
+  const [pendingDistribution, setPendingDistribution] = useState<any[]>([]);
   const [totalPOL, setTotalPOL] = useState(0);
   const [totalTokens, setTotalTokens] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [distributing, setDistributing] = useState(false);
   const { addLiquidity, loading } = useUniswapLiquidity();
   const { isConnected, account } = useWeb3();
 
   const fetchPendingOrders = async () => {
     setRefreshing(true);
+    
+    // Fetch orders pending liquidity addition
     const { data, error } = await supabase
       .from('token_orders')
       .select('*')
@@ -34,6 +38,21 @@ export const AdminLiquidityPanel = () => {
       setTotalPOL(pol);
       setTotalTokens(tokens);
     }
+    
+    // Fetch orders pending token distribution
+    const { data: distributionData, error: distributionError } = await supabase
+      .from('token_orders')
+      .select('*')
+      .eq('status', 'pending')
+      .eq('order_type', 'buy')
+      .is('fulfilled_at', null);
+      
+    if (distributionError) {
+      console.error('Failed to fetch distribution orders:', distributionError);
+    } else {
+      setPendingDistribution(distributionData || []);
+    }
+    
     setRefreshing(false);
   };
 
@@ -71,72 +90,153 @@ export const AdminLiquidityPanel = () => {
       }
     }
   };
+  
+  const handleDistributeTokens = async () => {
+    setDistributing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('distribute-tokens');
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        toast.success(`Successfully distributed tokens to ${data.processed} buyers`);
+        fetchPendingOrders();
+      } else {
+        toast.error('Token distribution failed');
+      }
+    } catch (error) {
+      console.error('Distribution error:', error);
+      toast.error('Failed to distribute tokens');
+    } finally {
+      setDistributing(false);
+    }
+  };
 
   return (
-    <Card className="p-8 bg-card/50 backdrop-blur border-border shadow-glow-secondary">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-primary rounded-lg">
-            <Droplets className="w-6 h-6 text-primary-foreground" />
+    <div className="space-y-6">
+      {/* Token Distribution Card */}
+      <Card className="p-8 bg-card/50 backdrop-blur border-border shadow-glow-secondary">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-primary rounded-lg">
+              <Send className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Token Distribution</h2>
+              <p className="text-sm text-muted-foreground">Distribute tokens to buyers automatically every 5 minutes</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold">Liquidity Management</h2>
-            <p className="text-sm text-muted-foreground">Add accumulated sales to Uniswap pool</p>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={fetchPendingOrders}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="p-4 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg border border-primary/20">
-          <div className="text-sm text-muted-foreground mb-1">Pending Orders</div>
-          <div className="text-3xl font-bold">{pendingOrders.length}</div>
-        </div>
-        <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Total POL</div>
-          <div className="text-3xl font-bold">{totalPOL.toFixed(4)}</div>
-        </div>
-        <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Total SGT Tokens</div>
-          <div className="text-3xl font-bold">{totalTokens.toFixed(2)}</div>
-        </div>
-      </div>
-
-      {pendingOrders.length > 0 ? (
-        <div className="space-y-4">
-          <div className="p-4 bg-muted/30 rounded-lg border border-border">
-            <h3 className="font-semibold mb-2">How it works:</h3>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>Click "Add Liquidity" to add accumulated POL and SGT tokens to the Uniswap pool</li>
-              <li>You'll need to approve the transaction in MetaMask</li>
-              <li>This will pair {totalTokens.toFixed(2)} SGT with {totalPOL.toFixed(4)} POL in the liquidity pool</li>
-              <li>After success, these orders will be marked as processed</li>
-            </ul>
-          </div>
-
           <Button
-            onClick={handleAddLiquidity}
-            disabled={loading || !isConnected}
-            className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold"
-            size="lg"
+            variant="outline"
+            size="icon"
+            onClick={fetchPendingOrders}
+            disabled={refreshing}
           >
-            <TrendingUp className="w-5 h-5 mr-2" />
-            {loading ? 'Adding Liquidity...' : 'Add Liquidity to Uniswap'}
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          <Droplets className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No pending orders to add liquidity for</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="p-4 bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-lg border border-orange-500/20">
+            <div className="text-sm text-muted-foreground mb-1">Pending Distributions</div>
+            <div className="text-3xl font-bold">{pendingDistribution.length}</div>
+          </div>
+          <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
+            <div className="text-sm text-muted-foreground mb-1">Total Tokens to Distribute</div>
+            <div className="text-3xl font-bold">
+              {pendingDistribution.reduce((sum, order) => sum + Number(order.token_amount), 0).toFixed(2)}
+            </div>
+          </div>
         </div>
-      )}
-    </Card>
+
+        {pendingDistribution.length > 0 ? (
+          <div className="space-y-4">
+            <div className="p-4 bg-muted/30 rounded-lg border border-border">
+              <h3 className="font-semibold mb-2">Distribution Info:</h3>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Tokens are automatically distributed every 5 minutes via scheduled job</li>
+                <li>You can manually trigger distribution now by clicking the button below</li>
+                <li>Distribution wallet will send tokens to buyer wallets</li>
+                <li>After success, orders will be marked as fulfilled</li>
+              </ul>
+            </div>
+
+            <Button
+              onClick={handleDistributeTokens}
+              disabled={distributing}
+              className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold"
+              size="lg"
+            >
+              <Send className="w-5 h-5 mr-2" />
+              {distributing ? 'Distributing Tokens...' : 'Distribute Tokens Now'}
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <Send className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>No pending token distributions</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Liquidity Management Card */}
+      <Card className="p-8 bg-card/50 backdrop-blur border-border shadow-glow-secondary">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-primary rounded-lg">
+              <Droplets className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Liquidity Management</h2>
+              <p className="text-sm text-muted-foreground">Add accumulated sales to Uniswap pool</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="p-4 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg border border-primary/20">
+            <div className="text-sm text-muted-foreground mb-1">Pending Orders</div>
+            <div className="text-3xl font-bold">{pendingOrders.length}</div>
+          </div>
+          <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/20">
+            <div className="text-sm text-muted-foreground mb-1">Total POL</div>
+            <div className="text-3xl font-bold">{totalPOL.toFixed(4)}</div>
+          </div>
+          <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
+            <div className="text-sm text-muted-foreground mb-1">Total SGT Tokens</div>
+            <div className="text-3xl font-bold">{totalTokens.toFixed(2)}</div>
+          </div>
+        </div>
+
+        {pendingOrders.length > 0 ? (
+          <div className="space-y-4">
+            <div className="p-4 bg-muted/30 rounded-lg border border-border">
+              <h3 className="font-semibold mb-2">How it works:</h3>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Click "Add Liquidity" to add accumulated POL and SGT tokens to the Uniswap pool</li>
+                <li>You'll need to approve the transaction in MetaMask</li>
+                <li>This will pair {totalTokens.toFixed(2)} SGT with {totalPOL.toFixed(4)} POL in the liquidity pool</li>
+                <li>After success, these orders will be marked as processed</li>
+              </ul>
+            </div>
+
+            <Button
+              onClick={handleAddLiquidity}
+              disabled={loading || !isConnected}
+              className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold"
+              size="lg"
+            >
+              <TrendingUp className="w-5 h-5 mr-2" />
+              {loading ? 'Adding Liquidity...' : 'Add Liquidity to Uniswap'}
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <Droplets className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>No pending orders to add liquidity for</p>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 };
