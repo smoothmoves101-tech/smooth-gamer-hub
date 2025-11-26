@@ -1,4 +1,5 @@
 import { AdminLiquidityPanel } from '@/components/AdminLiquidityPanel';
+import { AdminTransactionTracker } from '@/components/AdminTransactionTracker';
 import { Button } from '@/components/ui/button';
 import { useWeb3 } from '@/hooks/useWeb3';
 import { ArrowLeft } from 'lucide-react';
@@ -35,7 +36,10 @@ const Admin = () => {
               </Button>
             </div>
           ) : (
-            <AdminLiquidityPanel />
+            <>
+              <AdminLiquidityPanel />
+              <AdminTransactionTracker />
+            </>
           )}
         </div>
       </div>
