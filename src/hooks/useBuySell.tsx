@@ -5,8 +5,9 @@ import { useTokenContract } from "./useTokenContract";
 import { useToast } from "./use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-// Presale wallet address - replace with your actual wallet
-const PRESALE_WALLET = "0x0000000000000000000000000000000000000000"; // TODO: Replace with your wallet address
+// Presale wallet address - UPDATE THIS WITH YOUR ACTUAL WALLET ADDRESS
+// This is the wallet that will receive MATIC payments from token purchases
+const PRESALE_WALLET = "0x5387F9B43996fDe1834Dfd771552bB881E6Fef5fC"; // Replace with your actual wallet address
 
 export const useBuySell = () => {
   const [loading, setLoading] = useState(false);
