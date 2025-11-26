@@ -51,7 +51,23 @@ export const useBuySell = () => {
         description: "Waiting for confirmation...",
       });
 
-      const receipt = await tx.wait();
+      // Wait for transaction with proper error handling
+      let receipt;
+      try {
+        receipt = await tx.wait();
+      } catch (waitError: any) {
+        // If wait() fails due to ENS issues, check transaction status manually
+        console.log("Wait error, checking transaction manually:", waitError);
+        const provider = signer.provider;
+        if (provider) {
+          receipt = await provider.getTransactionReceipt(tx.hash);
+          // Wait a bit and check again if not found
+          if (!receipt) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            receipt = await provider.getTransactionReceipt(tx.hash);
+          }
+        }
+      }
 
       if (!receipt) {
         throw new Error("Transaction failed");
