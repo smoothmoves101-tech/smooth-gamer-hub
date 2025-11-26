@@ -1,6 +1,7 @@
 import { Hero } from "@/components/Hero";
 import { TokenDashboard } from "@/components/TokenDashboard";
 import { BuySellSection } from "@/components/BuySellSection";
+import { TransactionTracker } from "@/components/TransactionTracker";
 import { Benefits } from "@/components/Benefits";
 import { Roadmap } from "@/components/Roadmap";
 import { Whitepaper } from "@/components/Whitepaper";
@@ -12,6 +13,9 @@ const Index = () => {
       <Hero />
       <TokenDashboard />
       <BuySellSection />
+      <div className="container mx-auto px-4 py-12">
+        <TransactionTracker />
+      </div>
       <Benefits />
       <Roadmap />
       <Whitepaper />
