@@ -89,7 +89,24 @@ export const useTokenContract = () => {
 
       const amountBN = ethers.parseUnits(amount, decimals);
       const tx = await contract.transfer(recipient, amountBN);
-      await tx.wait();
+      
+      // Poll for transaction receipt instead of using wait()
+      let receipt = null;
+      let attempts = 0;
+      const maxAttempts = 60;
+      
+      while (!receipt && attempts < maxAttempts) {
+        try {
+          if (signer.provider) {
+            receipt = await signer.provider.getTransactionReceipt(tx.hash);
+            if (receipt) break;
+          }
+        } catch (error) {
+          console.log("Error getting receipt, retrying...", error);
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+      }
       
       // Refresh balance after transfer
       await fetchBalance();
@@ -113,7 +130,24 @@ export const useTokenContract = () => {
 
       const amountBN = ethers.parseUnits(amount, decimals);
       const tx = await contract.approve(spender, amountBN);
-      await tx.wait();
+      
+      // Poll for transaction receipt instead of using wait()
+      let receipt = null;
+      let attempts = 0;
+      const maxAttempts = 60;
+      
+      while (!receipt && attempts < maxAttempts) {
+        try {
+          if (signer.provider) {
+            receipt = await signer.provider.getTransactionReceipt(tx.hash);
+            if (receipt) break;
+          }
+        } catch (error) {
+          console.log("Error getting receipt, retrying...", error);
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+      }
       
       return tx;
     } catch (error) {

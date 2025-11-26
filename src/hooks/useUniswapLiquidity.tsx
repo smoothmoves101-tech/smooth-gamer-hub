@@ -55,7 +55,30 @@ export const useUniswapLiquidity = () => {
       );
 
       toast.info('Waiting for confirmation...');
-      const receipt = await tx.wait();
+      
+      // Poll for transaction receipt instead of using wait()
+      let receipt = null;
+      let attempts = 0;
+      const maxAttempts = 60;
+      
+      while (!receipt && attempts < maxAttempts) {
+        try {
+          const provider = signer.provider;
+          if (provider) {
+            receipt = await provider.getTransactionReceipt(tx.hash);
+            if (receipt) break;
+          }
+        } catch (error) {
+          console.log("Error getting receipt, retrying...", error);
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+      }
+      
+      if (!receipt) {
+        toast.error('Transaction confirmation timeout');
+        return { success: false };
+      }
 
       if (receipt.status === 1) {
         toast.success('Liquidity added successfully!');
