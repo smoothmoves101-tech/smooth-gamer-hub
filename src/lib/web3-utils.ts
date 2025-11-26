@@ -1,28 +1,42 @@
-import { BrowserProvider, Network } from 'ethers';
+import { BrowserProvider, JsonRpcSigner } from 'ethers';
 
 /**
- * Creates a Polygon network configuration without ENS support
- * This prevents "network does not support ENS" errors
+ * Creates a BrowserProvider that completely bypasses ENS resolution
+ * This is critical for Polygon network which doesn't support ENS
  */
-export const createPolygonNetwork = (): Network => {
-  return new Network('polygon', 137);
+export const createPolygonProvider = (ethereum: any): BrowserProvider => {
+  // Create provider without any network - this prevents automatic ENS lookups
+  const provider = new BrowserProvider(ethereum, {
+    chainId: 137,
+    name: 'polygon',
+  });
+  
+  // Override resolveName to prevent ENS lookups
+  provider.resolveName = async (name: string) => {
+    // If it's already an address, return it
+    if (name.startsWith('0x')) {
+      return name;
+    }
+    // Don't attempt ENS resolution
+    return null;
+  };
+  
+  return provider;
 };
 
 /**
- * Creates a BrowserProvider configured for Polygon without ENS
+ * Gets a signer that won't attempt ENS resolution
  */
-export const createPolygonProvider = (ethereum: any): BrowserProvider => {
-  // Create a network object that explicitly disables ENS
-  const network = new Network('polygon', 137);
+export const getPolygonSigner = async (provider: BrowserProvider): Promise<JsonRpcSigner> => {
+  const signer = await provider.getSigner();
   
-  // Create provider with the network that has no ENS support
-  const provider = new BrowserProvider(ethereum, network);
+  // Override resolveName on the signer as well
+  (signer as any).resolveName = async (name: string) => {
+    if (name.startsWith('0x')) {
+      return name;
+    }
+    return null;
+  };
   
-  // Override the network property to ensure ENS is never attempted
-  Object.defineProperty(provider, '_network', {
-    value: network,
-    writable: false
-  });
-  
-  return provider;
+  return signer;
 };

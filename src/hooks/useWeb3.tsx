@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { BrowserProvider, JsonRpcSigner } from 'ethers';
+import { JsonRpcSigner } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
-import { createPolygonProvider } from '@/lib/web3-utils';
+import { createPolygonProvider, getPolygonSigner } from '@/lib/web3-utils';
 
 interface Web3ContextType {
   account: string | null;
@@ -50,7 +50,7 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
         const accounts = await provider.listAccounts();
         
         if (accounts.length > 0) {
-          const signer = await provider.getSigner();
+          const signer = await getPolygonSigner(provider);
           const address = await signer.getAddress();
           setAccount(address);
           setSigner(signer);
@@ -99,7 +99,7 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
       const provider = createPolygonProvider(window.ethereum);
       await provider.send('eth_requestAccounts', []);
       
-      const signer = await provider.getSigner();
+      const signer = await getPolygonSigner(provider);
       const address = await signer.getAddress();
       setAccount(address);
       setSigner(signer);

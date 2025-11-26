@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ethers, Contract } from "ethers";
 import { useWeb3 } from "./useWeb3";
-import { createPolygonProvider } from "@/lib/web3-utils";
+import { createPolygonProvider, getPolygonSigner } from "@/lib/web3-utils";
 
 const CONTRACT_ADDRESS = "0x9F62d8Eaf274dba756C8189AeA325704Dc8BeE5a";
 const CONTRACT_ABI = [
@@ -29,6 +29,7 @@ export const useTokenContract = () => {
     const provider = createPolygonProvider(window.ethereum);
     
     if (withSigner && signer) {
+      // Use the existing signer from context (already configured without ENS)
       return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
     }
     
