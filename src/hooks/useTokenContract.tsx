@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { ethers, Contract, Network } from "ethers";
+import { ethers, Contract } from "ethers";
 import { useWeb3 } from "./useWeb3";
+import { createPolygonProvider } from "@/lib/web3-utils";
 
 const CONTRACT_ADDRESS = "0x9F62d8Eaf274dba756C8189AeA325704Dc8BeE5a";
 const CONTRACT_ABI = [
@@ -25,14 +26,7 @@ export const useTokenContract = () => {
   const getContract = (withSigner = false): Contract | null => {
     if (!window.ethereum) return null;
     
-    // Create network without ENS support for Polygon
-    const polygonNetwork = Network.from({
-      chainId: 137,
-      name: 'polygon',
-      ensAddress: null
-    });
-    
-    const provider = new ethers.BrowserProvider(window.ethereum, polygonNetwork);
+    const provider = createPolygonProvider(window.ethereum);
     
     if (withSigner && signer) {
       return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);

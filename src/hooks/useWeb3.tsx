@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { BrowserProvider, JsonRpcSigner, Network } from 'ethers';
+import { BrowserProvider, JsonRpcSigner } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
+import { createPolygonProvider } from '@/lib/web3-utils';
 
 interface Web3ContextType {
   account: string | null;
@@ -45,14 +46,7 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
   const checkConnection = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
-        // Create network without ENS support for Polygon
-        const polygonNetwork = Network.from({
-          chainId: 137,
-          name: 'polygon',
-          ensAddress: null
-        });
-        
-        const provider = new BrowserProvider(window.ethereum, polygonNetwork);
+        const provider = createPolygonProvider(window.ethereum);
         const accounts = await provider.listAccounts();
         
         if (accounts.length > 0) {
@@ -102,14 +96,7 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
 
     setIsConnecting(true);
     try {
-      // Create network without ENS support for Polygon
-      const polygonNetwork = Network.from({
-        chainId: 137,
-        name: 'polygon',
-        ensAddress: null
-      });
-      
-      const provider = new BrowserProvider(window.ethereum, polygonNetwork);
+      const provider = createPolygonProvider(window.ethereum);
       await provider.send('eth_requestAccounts', []);
       
       const signer = await provider.getSigner();
