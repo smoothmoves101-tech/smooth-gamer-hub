@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         payment_amount: paymentAmount,
         payment_currency: 'MATIC',
         transaction_hash: transactionHash,
-        status: 'completed'
+        status: 'pending' // Will be fulfilled by automatic distribution
       })
       .select()
       .single()
